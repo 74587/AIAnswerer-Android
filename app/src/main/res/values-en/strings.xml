@@ -1,0 +1,141 @@
+<resources>
+    <!-- App name -->
+    <string name="app_name">AI Answerer</string>
+
+    <!-- Main screen -->
+    <string name="main_title">AI Answerer</string>
+    <string name="status_label">Current Status</string>
+    <string name="status_running">Answer Mode Running</string>
+    <string name="status_stopped">Answer Mode Stopped</string>
+    <string name="button_start_mode">Start Answer Mode</string>
+    <string name="button_stop_mode">Stop Answer Mode</string>
+
+    <!-- Usage guide -->
+    <string name="usage_guide_title">Usage Guide</string>
+    <string name="usage_step_1">1. Click the button below to start answer mode</string>
+    <string name="usage_step_2">2. App will run in background with floating button</string>
+    <string name="usage_step_3">3. Click floating button to capture screen</string>
+    <string name="usage_step_4">4. Confirm the recognized question text</string>
+    <string name="usage_step_5">5. AI will analyze and provide answer</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="setting_auto_submit">Auto Submit Answer</string>
+    <string name="setting_auto_submit_desc">Get answer directly without confirmation dialog</string>
+    <string name="setting_auto_copy">Auto Copy to Clipboard</string>
+    <string name="setting_auto_copy_desc">Automatically copy answer to clipboard after generation</string>
+
+    <!-- Session Settings -->
+    <string name="session_settings_title">Session Settings</string>
+    <string name="session_settings_desc">Configure question types and scope to improve accuracy</string>
+    <string name="question_type_label">Question Types (Multiple)</string>
+    <string name="question_type_single">Single Choice</string>
+    <string name="question_type_multiple">Multiple Choice</string>
+    <string name="question_type_uncertain">Uncertain</string>
+    <string name="question_type_blank">Fill in Blank</string>
+    <string name="question_type_essay">Essay</string>
+    <string name="question_scope_label">Question Scope (Optional)</string>
+    <string name="question_scope_hint">Enter keywords or scope, leave blank for no limit</string>
+    <string name="model_settings_card_title">Model Settings</string>
+    <string name="model_settings_card_desc">Configure API and model parameters</string>
+    <string name="current_settings">Current: %s</string>
+
+    <!-- Menu -->
+    <string name="menu_settings">Settings</string>
+    <string name="menu_model_settings">Model Settings</string>
+    <string name="menu_about">About</string>
+    <string name="menu_more">More</string>
+
+    <!-- Model Settings screen -->
+    <string name="model_settings_title">Model Settings</string>
+    <string name="model_settings_notice">Currently only supports OpenAI format API</string>
+    <string name="label_api_url">API URL</string>
+    <string name="hint_api_url">e.g. https://api.openai.com/v1/chat/completions</string>
+    <string name="label_api_key">API Key</string>
+    <string name="hint_api_key">e.g. sk-xxxxxxxxxxxxxxxxxxxx</string>
+    <string name="label_model_name">Model Name</string>
+    <string name="hint_model_name">e.g. gpt-4 or deepseek-v3.1</string>
+    <string name="button_save">Save</string>
+    <string name="button_test_connection">Test Connection</string>
+    <string name="button_testing">Testing...</string>
+    <string name="toast_connection_success">Connection successful</string>
+    <string name="toast_connection_failed">Connection failed: %s</string>
+    <string name="toast_settings_saved">Settings saved</string>
+    <string name="toast_settings_error">Save failed, please check input</string>
+
+    <!-- About screen -->
+    <string name="about_title">About</string>
+    <string name="about_app_intro_title">App Introduction</string>
+    <string name="about_app_intro">An AI-powered Android answering assistant that uses screenshots and OCR to recognize questions and provides answers through AI.</string>
+    <string name="about_version_title">Version Information</string>
+    <string name="about_version">Version %1$s (%2$d)</string>
+    <string name="about_libraries_title">Core Libraries</string>
+    <string name="about_github_title">GitHub</string>
+    <string name="about_language_title">Language Settings</string>
+    <string name="about_language_chinese">简体中文</string>
+    <string name="about_language_english">English</string>
+    <string name="about_restart_dialog_title">Restart App</string>
+    <string name="about_restart_dialog_message">App needs to restart to switch language. Confirm restart?</string>
+    <string name="button_confirm">Confirm</string>
+    <string name="button_cancel">Cancel</string>
+
+    <!-- Common -->
+    <string name="back">Back</string>
+    <string name="close">Close</string>
+
+    <!-- Toast messages -->
+    <string name="toast_permission_overlay_required">Overlay permission required for answer mode</string>
+    <string name="toast_permission_capture_required">Screen capture permission required for answer mode</string>
+    <string name="toast_mode_started">Answer mode started</string>
+    <string name="toast_mode_stopped">Answer mode stopped</string>
+
+    <!-- Content descriptions (Accessibility) -->
+    <string name="cd_back_button">Back button</string>
+    <string name="cd_menu_button">Menu button</string>
+    <string name="cd_app_icon">App icon</string>
+    <string name="cd_capture_button">Capture</string>
+    <string name="cd_close_button">Close</string>
+    <string name="cd_hide_password">Hide password</string>
+    <string name="cd_show_password">Show password</string>
+
+    <!-- Confirm Text Screen -->
+    <string name="confirm_text_title">Confirm Recognized Text</string>
+    <string name="confirm_text_label">Recognized Text (Editable)</string>
+    <string name="confirm_text_placeholder">Edit or confirm the recognized text</string>
+    <string name="button_confirm_and_answer">Confirm and Get Answer</string>
+    <string name="toast_text_empty">Text is empty</string>
+    <string name="toast_getting_answer">Getting answer...</string>
+
+    <!-- Floating Window -->
+    <string name="floating_answer_title">Answer</string>
+    <string name="notification_content">Answer mode is running</string>
+
+    <!-- API Error Messages -->
+    <string name="error_empty_response">Empty response body</string>
+    <string name="error_no_answer_content">No answer content received</string>
+    <string name="error_parse_question_failed">Failed to parse question</string>
+    <string name="error_connection_test_failed">Connection test failed: %s</string>
+    <string name="error_unknown">Unknown error</string>
+
+    <!-- Text Recognition -->
+    <string name="error_no_text_recognized">No text recognized</string>
+    <string name="error_recognition_cancelled">Recognition cancelled</string>
+
+    <!-- Main Screen Others -->
+    <string name="link_close_screen_protection">Close Screen Share Protection</string>
+    <string name="toast_unable_to_open_link">Unable to open link</string>
+
+    <!-- Question Type Default -->
+    <string name="default_question_type">Single Choice</string>
+
+    <!-- Dialog related strings -->
+    <string name="dialog_language_title">选择语言 / Select Language</string>
+    <string name="dialog_language_message">Please select your preferred language:</string>
+    <string name="dialog_language_confirm">Confirm</string>
+    <string name="dialog_language_cancel">Cancel</string>
+
+    <string name="dialog_model_setup_title">AI Model Settings</string>
+    <string name="dialog_model_setup_message">To use the AI answering feature, you need to configure API parameters first. Go to settings now?</string>
+    <string name="dialog_model_setup_confirm">Go to Settings</string>
+    <string name="dialog_model_setup_cancel">Cancel</string>
+</resources>

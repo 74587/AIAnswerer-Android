@@ -1,0 +1,142 @@
+<resources>
+    <!-- 应用名称 -->
+    <string name="app_name">AI答题助手</string>
+
+    <!-- 主界面 -->
+    <string name="main_title">AI答题助手</string>
+    <string name="status_label">当前状态</string>
+    <string name="status_running">答题模式运行中</string>
+    <string name="status_stopped">答题模式未启动</string>
+    <string name="button_start_mode">进入答题模式</string>
+    <string name="button_stop_mode">退出答题模式</string>
+
+    <!-- 使用说明 -->
+    <string name="usage_guide_title">使用说明</string>
+    <string name="usage_step_1">1. 点击下方按钮进入答题模式</string>
+    <string name="usage_step_2">2. 应用将在后台运行，显示悬浮按钮</string>
+    <string name="usage_step_3">3. 点击悬浮按钮进行截图</string>
+    <string name="usage_step_4">4. 确认识别的题目文本</string>
+    <string name="usage_step_5">5. AI将自动分析并给出答案</string>
+
+    <!-- 设置 -->
+    <string name="settings_title">设置</string>
+    <string name="setting_auto_submit">自动提交答案</string>
+    <string name="setting_auto_submit_desc">识别后直接获取答案，不显示确认对话框</string>
+    <string name="setting_auto_copy">自动复制到剪贴板</string>
+    <string name="setting_auto_copy_desc">生成答案后自动复制到剪贴板</string>
+
+    <!-- 本次答题设置 -->
+    <string name="session_settings_title">本次答题设置</string>
+    <string name="session_settings_desc">根据题型和范围设置，提高答题准确率</string>
+    <string name="question_type_label">题型选择（可多选）</string>
+    <string name="question_type_single">单选题</string>
+    <string name="question_type_multiple">多选题</string>
+    <string name="question_type_uncertain">不定项</string>
+    <string name="question_type_blank">填空题</string>
+    <string name="question_type_essay">问答题</string>
+    <string name="question_scope_label">题目内容范围（可选）</string>
+    <string name="question_scope_hint">输入题目关键词或范围，留空则不限制</string>
+    <string name="model_settings_card_title">模型设置</string>
+    <string name="model_settings_card_desc">配置API和模型参数</string>
+    <string name="current_settings">当前设置：%s</string>
+
+    <!-- 菜单 -->
+    <string name="menu_settings">设置</string>
+    <string name="menu_model_settings">模型设置</string>
+    <string name="menu_about">关于</string>
+    <string name="menu_more">更多</string>
+
+    <!-- 模型设置页面 -->
+    <string name="model_settings_title">模型设置</string>
+    <string name="model_settings_notice">目前仅支持OpenAI格式的API</string>
+    <string name="label_api_url">API地址</string>
+    <string name="hint_api_url">例如: https://api.openai.com/v1/chat/completions</string>
+    <string name="label_api_key">API密钥</string>
+    <string name="hint_api_key">例如: sk-xxxxxxxxxxxxxxxxxxxx</string>
+    <string name="label_model_name">模型名称</string>
+    <string name="hint_model_name">例如: gpt-4 或 deepseek-v3.1</string>
+    <string name="button_save">保存</string>
+    <string name="button_test_connection">测试连接</string>
+    <string name="button_testing">测试中...</string>
+    <string name="toast_connection_success">连接成功</string>
+    <string name="toast_connection_failed">连接失败：%s</string>
+    <string name="toast_settings_saved">设置已保存</string>
+    <string name="toast_settings_error">保存失败，请检查输入</string>
+
+    <!-- 关于页面 -->
+    <string name="about_title">关于</string>
+    <string name="about_app_intro_title">应用简介</string>
+    <string name="about_app_intro">一个基于AI的Android答题助手应用，使用截图和OCR技术识别题目，通过AI提供答案。</string>
+    <string name="about_version_title">版本信息</string>
+    <string name="about_version">版本 %1$s (%2$d)</string>
+    <string name="about_libraries_title">核心第三方库</string>
+    <string name="about_github_title">GitHub</string>
+    <string name="about_github_link" translatable="false">https://github.com/wb-hwang/AIAnswerer-Android</string>
+    <string name="about_language_title">语言设置</string>
+    <string name="about_language_chinese">简体中文</string>
+    <string name="about_language_english">English</string>
+    <string name="about_restart_dialog_title">重启应用</string>
+    <string name="about_restart_dialog_message">需要重启应用才能切换语言，确定要重启吗？</string>
+    <string name="button_confirm">确定</string>
+    <string name="button_cancel">取消</string>
+
+    <!-- 通用 -->
+    <string name="back">返回</string>
+    <string name="close">关闭</string>
+
+    <!-- Toast提示 -->
+    <string name="toast_permission_overlay_required">需要悬浮窗权限才能使用答题模式</string>
+    <string name="toast_permission_capture_required">需要截图权限才能使用答题模式</string>
+    <string name="toast_mode_started">答题模式已启动</string>
+    <string name="toast_mode_stopped">答题模式已停止</string>
+
+    <!-- 内容描述 (Accessibility) -->
+    <string name="cd_back_button">返回按钮</string>
+    <string name="cd_menu_button">菜单按钮</string>
+    <string name="cd_app_icon">应用图标</string>
+    <string name="cd_capture_button">截图</string>
+    <string name="cd_close_button">关闭</string>
+    <string name="cd_hide_password">隐藏密码</string>
+    <string name="cd_show_password">显示密码</string>
+
+    <!-- 确认文本界面 -->
+    <string name="confirm_text_title">确认识别内容</string>
+    <string name="confirm_text_label">识别的文本（可编辑）</string>
+    <string name="confirm_text_placeholder">请编辑或确认识别的文本</string>
+    <string name="button_confirm_and_answer">确认并获取答案</string>
+    <string name="toast_text_empty">文本为空</string>
+    <string name="toast_getting_answer">正在获取答案...</string>
+
+    <!-- 悬浮窗 -->
+    <string name="floating_answer_title">答案</string>
+    <string name="notification_content">答题模式运行中</string>
+
+    <!-- API错误消息 -->
+    <string name="error_empty_response">响应体为空</string>
+    <string name="error_no_answer_content">未获取到答案内容</string>
+    <string name="error_parse_question_failed">无法解析题目</string>
+    <string name="error_connection_test_failed">连接测试失败: %s</string>
+    <string name="error_unknown">未知错误</string>
+
+    <!-- 文本识别 -->
+    <string name="error_no_text_recognized">未识别到文本</string>
+    <string name="error_recognition_cancelled">识别被取消</string>
+
+    <!-- 主界面其他 -->
+    <string name="link_close_screen_protection">关闭屏幕共享防护</string>
+    <string name="toast_unable_to_open_link">无法打开链接</string>
+
+    <!-- 题型默认值 -->
+    <string name="default_question_type">单选题</string>
+
+    <!-- Dialog相关字符串 -->
+    <string name="dialog_language_title">选择语言 / Select Language</string>
+    <string name="dialog_language_message">请选择您偏好的应用语言：</string>
+    <string name="dialog_language_confirm">确定</string>
+    <string name="dialog_language_cancel">取消</string>
+
+    <string name="dialog_model_setup_title">AI模型设置</string>
+    <string name="dialog_model_setup_message">为了使用AI答题功能，您需要先配置API参数。是否立即前往设置？</string>
+    <string name="dialog_model_setup_confirm">前往设置</string>
+    <string name="dialog_model_setup_cancel">取消</string>
+</resources>
