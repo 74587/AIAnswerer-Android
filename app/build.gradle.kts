@@ -29,7 +29,7 @@ android {
         minSdk = 30
         targetSdk = 34
         versionCode = 1
-        versionName = "1.0"
+        versionName = "0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -75,7 +75,7 @@ android {
             val outputImpl = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
             val date = SimpleDateFormat("yyyyMMdd-HHmm").format(Date())
             outputImpl.outputFileName =
-                "AIAnswerer-${versionNameValue}-${buildTypeName}-${date}.apk"
+                "${date}_AIAnswerer_v${versionNameValue}.apk"
         }
     }
 

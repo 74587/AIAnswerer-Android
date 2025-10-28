@@ -97,3 +97,4 @@ Thumbs.db
 *.plan.md
 /.idea/
 /.kotlin/
+*.jks
