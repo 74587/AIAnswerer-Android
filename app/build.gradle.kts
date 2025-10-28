@@ -75,7 +75,7 @@ android {
             val outputImpl = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
             val date = SimpleDateFormat("yyyyMMdd-HHmm").format(Date())
             outputImpl.outputFileName =
-                "${date}-AIAnswerer-${versionNameValue}.apk"
+                "${date}_AIAnswerer_v${versionNameValue}.apk"
         }
     }
 
