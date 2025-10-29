@@ -206,7 +206,11 @@ fun ModelSettingsScreen(
                         testState = TestConnectionState.Testing
 
                         // 调用API测试方法
-                        val result = OpenAIClient.getInstance().testConnection()
+                        val result = OpenAIClient.getInstance().testConnection(
+                            apiUrl,
+                            apiKey,
+                            modelName
+                        )
 
                         result.onSuccess {
                             testState = TestConnectionState.Success
