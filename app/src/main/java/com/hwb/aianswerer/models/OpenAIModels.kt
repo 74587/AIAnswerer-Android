@@ -122,3 +122,41 @@ data class AIAnswer(
     }
 }
 
+/**
+ * 根据显示配置格式化答案
+ *
+ * 此扩展函数提供了可配置的答案格式化功能，允许根据用户设置选择性地显示题目、选项和答案。
+ * 保持与原formatAnswer()方法相同的格式风格，确保UI显示一致性。
+ *
+ * @param showQuestion 是否显示题目内容，默认为true
+ * @param showOptions 是否显示选项内容，默认为true。注意：仅当options非空时此参数才有效
+ * @return 格式化后的答案字符串，至少包含【答案】部分
+ *
+ * @see formatAnswer 原始的完整格式化方法
+ */
+fun AIAnswer.formatAnswerWithConfig(
+    showQuestion: Boolean = true,
+    showOptions: Boolean = true
+): String {
+    return buildString {
+        // 根据配置显示题目
+        if (showQuestion) {
+            appendLine("【题目】")
+            appendLine(question)
+            appendLine()
+        }
+
+        // 根据配置和选项存在性显示选项
+        if (showOptions && !options.isNullOrEmpty()) {
+            appendLine("【选项】")
+            options.forEach { appendLine(it) }
+            appendLine()
+        }
+
+        // 始终显示答案
+        appendLine("【答案】")
+        append(answer)
+    }
+}
+// {{END MODIFICATIONS}}
+

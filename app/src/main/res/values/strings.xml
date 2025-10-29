@@ -24,6 +24,12 @@
     <string name="setting_auto_submit_desc">识别后直接获取答案，不显示确认对话框</string>
     <string name="setting_auto_copy">自动复制到剪贴板</string>
     <string name="setting_auto_copy_desc">生成答案后自动复制到剪贴板</string>
+    <string name="setting_display_control_title">答题卡片显示内容</string>
+    <string name="setting_display_control_desc">自定义答题卡片显示的内容</string>
+    <string name="setting_show_question">显示题目</string>
+    <string name="setting_show_question_desc">在答题卡片中显示题目内容</string>
+    <string name="setting_show_options">显示选项</string>
+    <string name="setting_show_options_desc">在答题卡片中显示选项内容</string>
 
     <!-- 本次答题设置 -->
     <string name="session_settings_title">本次答题设置</string>
@@ -112,7 +118,7 @@
     <string name="toast_getting_answer">正在获取答案...</string>
 
     <!-- 悬浮窗 -->
-    <string name="floating_answer_title">答案</string>
+    <string name="floating_answer_title">AI 响应</string>
     <string name="notification_content">答题模式运行中</string>
 
     <!-- API错误消息 -->

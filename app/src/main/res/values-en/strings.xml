@@ -24,6 +24,12 @@
     <string name="setting_auto_submit_desc">Get answer directly without confirmation dialog</string>
     <string name="setting_auto_copy">Auto Copy to Clipboard</string>
     <string name="setting_auto_copy_desc">Automatically copy answer to clipboard after generation</string>
+    <string name="setting_display_control_title">Answer Card Display Content</string>
+    <string name="setting_display_control_desc">Customize answer card display content</string>
+    <string name="setting_show_question">Show Question</string>
+    <string name="setting_show_question_desc">Display question content in answer card</string>
+    <string name="setting_show_options">Show Options</string>
+    <string name="setting_show_options_desc">Display options in answer card</string>
 
     <!-- Session Settings -->
     <string name="session_settings_title">Session Settings</string>
@@ -111,7 +117,7 @@
     <string name="toast_getting_answer">Getting answer...</string>
 
     <!-- Floating Window -->
-    <string name="floating_answer_title">Answer</string>
+    <string name="floating_answer_title">AI Response</string>
     <string name="notification_content">Answer mode is running</string>
 
     <!-- API Error Messages -->

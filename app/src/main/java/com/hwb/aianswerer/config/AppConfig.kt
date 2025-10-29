@@ -22,6 +22,8 @@ object AppConfig {
     private const val KEY_QUESTION_SCOPE = "question_scope"
     private const val KEY_IS_FIRST_LAUNCH = "is_first_launch"
     private const val KEY_CROP_MODE = "crop_mode"
+    private const val KEY_SHOW_ANSWER_CARD_QUESTION = "show_answer_card_question"
+    private const val KEY_SHOW_ANSWER_CARD_OPTIONS = "show_answer_card_options"
 
     // 语言代码常量
     const val LANGUAGE_ZH = "zh"
@@ -193,6 +195,39 @@ object AppConfig {
      */
     fun getQuestionScope(): String {
         return mmkv.decodeString(KEY_QUESTION_SCOPE, "") ?: ""
+    }
+
+    // ========== 答题卡片显示控制相关 ==========
+    /**
+     * 保存答题卡片是否显示题目设置
+     * @param show 是否显示题目
+     */
+    fun saveShowAnswerCardQuestion(show: Boolean) {
+        mmkv.encode(KEY_SHOW_ANSWER_CARD_QUESTION, show)
+    }
+
+    /**
+     * 获取答题卡片是否显示题目设置
+     * @return 是否显示题目，默认为true
+     */
+    fun getShowAnswerCardQuestion(): Boolean {
+        return mmkv.decodeBool(KEY_SHOW_ANSWER_CARD_QUESTION, true)
+    }
+
+    /**
+     * 保存答题卡片是否显示选项设置
+     * @param show 是否显示选项
+     */
+    fun saveShowAnswerCardOptions(show: Boolean) {
+        mmkv.encode(KEY_SHOW_ANSWER_CARD_OPTIONS, show)
+    }
+
+    /**
+     * 获取答题卡片是否显示选项设置
+     * @return 是否显示选项，默认为true
+     */
+    fun getShowAnswerCardOptions(): Boolean {
+        return mmkv.decodeBool(KEY_SHOW_ANSWER_CARD_OPTIONS, true)
     }
 
     // ========== 截图识别模式相关 ==========

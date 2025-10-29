@@ -65,6 +65,7 @@ import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.hwb.aianswerer.api.OpenAIClient
+import com.hwb.aianswerer.models.formatAnswerWithConfig
 import com.hwb.aianswerer.ui.icons.LocalIcons
 import com.hwb.aianswerer.utils.ClipboardUtil
 import kotlinx.coroutines.CoroutineScope
@@ -465,7 +466,13 @@ class FloatingWindowService : Service(), LifecycleOwner, ViewModelStoreOwner,
                 val result = apiClient.analyzeQuestion(text, questionTypes, questionScope)
 
                 result.onSuccess { aiAnswer ->
-                    val formattedAnswer = aiAnswer.formatAnswer()
+                    // 读取答题卡片显示配置
+                    val showQuestion =
+                        com.hwb.aianswerer.config.AppConfig.getShowAnswerCardQuestion()
+                    val showOptions = com.hwb.aianswerer.config.AppConfig.getShowAnswerCardOptions()
+
+                    // 根据配置格式化答案
+                    val formattedAnswer = aiAnswer.formatAnswerWithConfig(showQuestion, showOptions)
 
                     // 根据设置决定是否复制到剪贴板
                     if (autoCopy) {

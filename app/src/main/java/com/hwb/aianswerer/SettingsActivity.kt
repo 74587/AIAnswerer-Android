@@ -88,6 +88,8 @@ fun SettingsScreen(
     // 从配置中加载当前值
     var autoSubmit by remember { mutableStateOf(AppConfig.getAutoSubmit()) }
     var autoCopy by remember { mutableStateOf(AppConfig.getAutoCopy()) }
+    var showQuestion by remember { mutableStateOf(AppConfig.getShowAnswerCardQuestion()) }
+    var showOptions by remember { mutableStateOf(AppConfig.getShowAnswerCardOptions()) }
 
     // 语言设置状态
     var showRestartDialog by remember { mutableStateOf(false) }
@@ -215,6 +217,90 @@ fun SettingsScreen(
                             onCheckedChange = {
                                 autoCopy = it
                                 AppConfig.saveAutoCopy(it)
+                            }
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // 答题卡片显示控制卡片
+            Card(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.setting_display_control_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                    Text(
+                        text = stringResource(R.string.setting_display_control_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+
+                    // 显示题目开关
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(R.string.setting_show_question),
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Text(
+                                text = stringResource(R.string.setting_show_question_desc),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                        }
+                        Switch(
+                            checked = showQuestion,
+                            onCheckedChange = {
+                                showQuestion = it
+                                AppConfig.saveShowAnswerCardQuestion(it)
+                            }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // 显示选项开关
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(R.string.setting_show_options),
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Text(
+                                text = stringResource(R.string.setting_show_options_desc),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                        }
+                        Switch(
+                            checked = showOptions,
+                            onCheckedChange = {
+                                showOptions = it
+                                AppConfig.saveShowAnswerCardOptions(it)
                             }
                         )
                     }
