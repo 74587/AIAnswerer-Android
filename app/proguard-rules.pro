@@ -120,7 +120,7 @@
 # 保护应用的主要类
 -keep class com.hwb.aianswerer.MainActivity { *; }
 -keep class com.hwb.aianswerer.FloatingWindowService { *; }
--keep class com.hwb.aianswerer.AIAnswererApplication { *; }
+-keep class com.hwb.aianswerer.MyApplication { *; }
 
 # 保护配置类
 -keep class com.hwb.aianswerer.Constants { *; }
