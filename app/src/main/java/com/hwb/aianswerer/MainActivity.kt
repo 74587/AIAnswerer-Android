@@ -10,6 +10,10 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,9 +26,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -33,6 +40,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
@@ -47,6 +55,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -201,6 +210,21 @@ class MainActivity : ComponentActivity() {
      * 检查并请求所需权限
      */
     private fun checkAndRequestPermissions() {
+        // 首先检查模型是否已配置
+        if (!AppConfig.isApiConfigValid()) {
+            Toast.makeText(
+                this,
+                getString(R.string.toast_model_not_configured),
+                Toast.LENGTH_LONG
+            ).show()
+            // 显示模型设置提醒Dialog
+            if (!dialogQueue.contains(DIALOG_MODEL_SETUP)) {
+                dialogQueue.add(DIALOG_MODEL_SETUP)
+                processDialogQueue()
+            }
+            return
+        }
+
         // 先检查悬浮窗权限
         if (!checkOverlayPermission()) {
             requestOverlayPermission()
@@ -477,34 +501,7 @@ fun MainScreen(
                     }
 
                     // 功能说明
-                    Card(
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp)
-                        ) {
-                            Text(
-                                text = stringResource(R.string.usage_guide_title),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(bottom = 12.dp)
-                            )
-
-                            FeatureItem(stringResource(R.string.usage_step_1), context)
-                            FeatureItem(stringResource(R.string.usage_step_2), context)
-                            FeatureItem(stringResource(R.string.usage_step_3), context)
-                            FeatureItem(stringResource(R.string.usage_step_4), context)
-                            FeatureItem(stringResource(R.string.usage_step_5), context)
-                            FeatureItem(
-                                text = "6. 如果识别不出来，请考虑",
-                                context = context,
-                                urlText = MyApplication.getString(R.string.link_close_screen_protection),
-                                url = "https://jingyan.baidu.com/article/7f41ecec6bf8de183c095c29.html"
-                            )
-                        }
-                    }
+                    UsageGuideCard(context = context)
 
                     Spacer(modifier = Modifier.height(8.dp))
 
@@ -561,6 +558,88 @@ fun MainScreen(
             onDismiss = onModelSetupDismiss,
             onGoToSettings = onGoToSettings
         )
+    }
+}
+
+/**
+ * 可展开/收起的使用说明卡片
+ * @param context Android上下文，用于打开链接
+ */
+@Composable
+fun UsageGuideCard(context: Context) {
+    // 展开/收起状态
+    var isExpanded by remember { mutableStateOf(false) }
+
+    // 展开图标的旋转动画
+    val rotationAngle by animateFloatAsState(
+        targetValue = if (isExpanded) 180f else 0f,
+        label = "expand_icon_rotation"
+    )
+
+    Card(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            // 标题行，包含展开/收起按钮
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { isExpanded = !isExpanded }
+                    .padding(bottom = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.usage_guide_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+
+                // 展开/收起图标
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowDown,
+                    contentDescription = if (isExpanded) "收起" else "展开",
+                    modifier = Modifier
+                        .size(24.dp)
+                        .graphicsLayer(rotationZ = rotationAngle),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            // 始终显示的内容
+            FeatureItem(stringResource(R.string.usage_step_0), context)
+            FeatureItem(stringResource(R.string.usage_step_1), context)
+            FeatureItem(stringResource(R.string.usage_step_2), context)
+            FeatureItem(stringResource(R.string.usage_step_3), context)
+            FeatureItem(stringResource(R.string.usage_step_4), context)
+            FeatureItem(stringResource(R.string.usage_step_5), context)
+
+            // 可展开的其余内容
+            AnimatedVisibility(
+                visible = isExpanded,
+                enter = expandVertically(),
+                exit = shrinkVertically()
+            ) {
+                Column {
+                    FeatureItem(
+                        context = context,
+                        text = stringResource(R.string.usage_step_6_text),
+                        urlText = stringResource(R.string.link_close_screen_protection),
+                        url = stringResource(R.string.usage_step_6_url)
+                    )
+                    FeatureItem(
+                        context = context,
+                        text = stringResource(R.string.usage_step_7_text),
+                        urlText = stringResource(R.string.usage_step_7_link),
+                        url = stringResource(R.string.usage_step_7_url)
+                    )
+                }
+            }
+        }
     }
 }
 

@@ -11,12 +11,18 @@
     <string name="button_stop_mode">Stop Answer Mode</string>
 
     <!-- Usage guide -->
-    <string name="usage_guide_title">Usage Guide</string>
+    <string name="usage_guide_title">Usage Guide &amp; FAQ</string>
+    <string name="usage_step_0">0. Configure AI Model</string>
     <string name="usage_step_1">1. Click the button below to start answer mode</string>
     <string name="usage_step_2">2. App will run in background with floating button</string>
     <string name="usage_step_3">3. Click floating button to capture screen</string>
     <string name="usage_step_4">4. Confirm the recognized question text</string>
     <string name="usage_step_5">5. AI will analyze and provide answer</string>
+    <string name="usage_step_6_text">6. If recognition fails, consider</string>
+    <string name="usage_step_6_url" translatable="false">https://jingyan.baidu.com/article/7f41ecec6bf8de183c095c29.html</string>
+    <string name="usage_step_7_text">7. If you see "System has denied access permission to this app" when granting overlay permission</string>
+    <string name="usage_step_7_link">Please manually enable "Display over other apps"</string>
+    <string name="usage_step_7_url" translatable="false">https://bbs.oneplus.com/thread/5077724</string>
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>
@@ -94,6 +100,7 @@
     <string name="close">Close</string>
 
     <!-- Toast messages -->
+    <string name="toast_model_not_configured">Please configure AI model first</string>
     <string name="toast_permission_overlay_required">Overlay permission required for answer mode</string>
     <string name="toast_permission_capture_required">Screen capture permission required for answer mode</string>
     <string name="toast_mode_started">Answer mode started</string>

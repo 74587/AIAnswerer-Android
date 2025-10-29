@@ -11,12 +11,18 @@
     <string name="button_stop_mode">退出答题模式</string>
 
     <!-- 使用说明 -->
-    <string name="usage_guide_title">使用说明</string>
+    <string name="usage_guide_title">使用说明及常见问题</string>
+    <string name="usage_step_0">0. 配置好AI模型</string>
     <string name="usage_step_1">1. 点击下方按钮进入答题模式</string>
     <string name="usage_step_2">2. 应用将在后台运行，显示悬浮按钮</string>
     <string name="usage_step_3">3. 点击悬浮按钮进行截图</string>
     <string name="usage_step_4">4. 确认识别的题目文本</string>
     <string name="usage_step_5">5. AI将自动分析并给出答案</string>
+    <string name="usage_step_6_text">6. 如果识别不出来，请考虑</string>
+    <string name="usage_step_6_url" translatable="false">https://jingyan.baidu.com/article/7f41ecec6bf8de183c095c29.html</string>
+    <string name="usage_step_7_text">7. 获取悬浮窗权限的时候，提示"系统已拒绝向此应用授予访问权限"</string>
+    <string name="usage_step_7_link">请手动设置"显示其它应用的上层"</string>
+    <string name="usage_step_7_url" translatable="false">https://bbs.oneplus.com/thread/5077724</string>
 
     <!-- 设置 -->
     <string name="settings_title">设置</string>
@@ -95,6 +101,7 @@
     <string name="close">关闭</string>
 
     <!-- Toast提示 -->
+    <string name="toast_model_not_configured">请先配置AI模型\n右上角-设置-模型设置</string>
     <string name="toast_permission_overlay_required">需要悬浮窗权限才能使用答题模式</string>
     <string name="toast_permission_capture_required">需要截图权限才能使用答题模式</string>
     <string name="toast_mode_started">答题模式已启动</string>
