@@ -98,6 +98,7 @@ class FloatingWindowService : Service(), LifecycleOwner, ViewModelStoreOwner,
     private var questionScope = ""  // 题目范围
     private var cropMode = com.hwb.aianswerer.config.AppConfig.CROP_MODE_FULL  // 截图识别模式
     private var savedCropRect: com.hwb.aianswerer.models.CropRect? = null  // 保存的裁剪坐标（单次模式）
+    private var savedCropRectEach: com.hwb.aianswerer.models.CropRect? = null  // 保存的裁剪坐标（每次模式）
 
     // Lifecycle
     private val lifecycleRegistry = LifecycleRegistry(this)
@@ -149,9 +150,15 @@ class FloatingWindowService : Service(), LifecycleOwner, ViewModelStoreOwner,
                             bottomRight = android.graphics.PointF(bottomRightX, bottomRightY)
                         )
 
-                        // 如果是单次模式，保存裁剪坐标
-                        if (cropMode == com.hwb.aianswerer.config.AppConfig.CROP_MODE_ONCE) {
-                            savedCropRect = cropRect
+                        // 根据模式保存裁剪坐标
+                        when (cropMode) {
+                            com.hwb.aianswerer.config.AppConfig.CROP_MODE_ONCE -> {
+                                savedCropRect = cropRect
+                            }
+
+                            com.hwb.aianswerer.config.AppConfig.CROP_MODE_EACH -> {
+                                savedCropRectEach = cropRect
+                            }
                         }
 
                         // 处理裁剪后的图片
@@ -228,6 +235,7 @@ class FloatingWindowService : Service(), LifecycleOwner, ViewModelStoreOwner,
 
             // 清除保存的裁剪坐标（新答题会话）
             savedCropRect = null
+            savedCropRectEach = null
         }
         return START_STICKY
     }
@@ -305,8 +313,8 @@ class FloatingWindowService : Service(), LifecycleOwner, ViewModelStoreOwner,
                     }
 
                     com.hwb.aianswerer.config.AppConfig.CROP_MODE_EACH -> {
-                        // 部分识别（每次）：启动裁剪Activity
-                        launchCropActivity(bitmap)
+                        // 部分识别（每次）：启动裁剪Activity（传递上次的坐标）
+                        launchCropActivity(bitmap, savedCropRectEach)
                     }
 
                     com.hwb.aianswerer.config.AppConfig.CROP_MODE_ONCE -> {
@@ -320,7 +328,7 @@ class FloatingWindowService : Service(), LifecycleOwner, ViewModelStoreOwner,
                             processBitmap(croppedBitmap)
                         } else {
                             // 没有坐标：启动裁剪Activity
-                            launchCropActivity(bitmap)
+                            launchCropActivity(bitmap, null)
                         }
                     }
                 }
@@ -339,8 +347,13 @@ class FloatingWindowService : Service(), LifecycleOwner, ViewModelStoreOwner,
 
     /**
      * 启动裁剪Activity
+     * @param bitmap 待裁剪的图片
+     * @param previousCropRect 上一次的裁剪坐标（如果有的话）
      */
-    private suspend fun launchCropActivity(bitmap: android.graphics.Bitmap) {
+    private suspend fun launchCropActivity(
+        bitmap: android.graphics.Bitmap,
+        previousCropRect: com.hwb.aianswerer.models.CropRect?
+    ) {
         try {
             // 保存bitmap到临时文件
             val imagePath =
@@ -350,6 +363,13 @@ class FloatingWindowService : Service(), LifecycleOwner, ViewModelStoreOwner,
             // 启动裁剪Activity
             val intent = Intent(this, ImageCropActivity::class.java).apply {
                 putExtra(ImageCropActivity.EXTRA_IMAGE_PATH, imagePath)
+                // 如果有上次的裁剪坐标，则传递过去
+                previousCropRect?.let {
+                    putExtra(ImageCropActivity.EXTRA_PREVIOUS_TOP_LEFT_X, it.topLeft.x)
+                    putExtra(ImageCropActivity.EXTRA_PREVIOUS_TOP_LEFT_Y, it.topLeft.y)
+                    putExtra(ImageCropActivity.EXTRA_PREVIOUS_BOTTOM_RIGHT_X, it.bottomRight.x)
+                    putExtra(ImageCropActivity.EXTRA_PREVIOUS_BOTTOM_RIGHT_Y, it.bottomRight.y)
+                }
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             startActivity(intent)

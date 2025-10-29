@@ -55,7 +55,7 @@ import kotlin.math.sqrt
 
 /**
  * 图片裁剪Activity
- * 简化版：只支持拖动左上角和右下角调整矩形区域
+ * 支持拖动四个角调整矩形裁剪区域
  */
 class ImageCropActivity : ComponentActivity() {
 
@@ -85,10 +85,27 @@ class ImageCropActivity : ComponentActivity() {
             return
         }
 
+        // 获取上一次的裁剪坐标（如果有）
+        val previousCropRect = if (intent.hasExtra(EXTRA_PREVIOUS_TOP_LEFT_X)) {
+            CropRect(
+                topLeft = PointF(
+                    intent.getFloatExtra(EXTRA_PREVIOUS_TOP_LEFT_X, 0f),
+                    intent.getFloatExtra(EXTRA_PREVIOUS_TOP_LEFT_Y, 0f)
+                ),
+                bottomRight = PointF(
+                    intent.getFloatExtra(EXTRA_PREVIOUS_BOTTOM_RIGHT_X, 0f),
+                    intent.getFloatExtra(EXTRA_PREVIOUS_BOTTOM_RIGHT_Y, 0f)
+                )
+            )
+        } else {
+            null
+        }
+
         setContent {
             AIAnswererTheme {
                 ImageCropScreen(
                     bitmap = bitmap!!,
+                    previousCropRect = previousCropRect,
                     onConfirm = { cropRect ->
                         // 通过广播返回裁剪坐标
                         val broadcastIntent =
@@ -126,12 +143,17 @@ class ImageCropActivity : ComponentActivity() {
         const val EXTRA_TOP_LEFT_Y = "top_left_y"
         const val EXTRA_BOTTOM_RIGHT_X = "bottom_right_x"
         const val EXTRA_BOTTOM_RIGHT_Y = "bottom_right_y"
+        const val EXTRA_PREVIOUS_TOP_LEFT_X = "previous_top_left_x"
+        const val EXTRA_PREVIOUS_TOP_LEFT_Y = "previous_top_left_y"
+        const val EXTRA_PREVIOUS_BOTTOM_RIGHT_X = "previous_bottom_right_x"
+        const val EXTRA_PREVIOUS_BOTTOM_RIGHT_Y = "previous_bottom_right_y"
     }
 }
 
 @Composable
 fun ImageCropScreen(
     bitmap: Bitmap,
+    previousCropRect: CropRect? = null,
     onConfirm: (CropRect) -> Unit,
     onCancel: () -> Unit
 ) {
@@ -168,18 +190,32 @@ fun ImageCropScreen(
     var topLeft by remember { mutableStateOf(PointF(0f, 0f)) }
     var bottomRight by remember { mutableStateOf(PointF(0f, 0f)) }
 
-    // 当前拖动的角（-1: 无, 0: 左上, 1: 右下）
+    // 当前拖动的角（-1: 无, 0: 左上, 1: 右下, 2: 右上, 3: 左下）
     var draggingCorner by remember { mutableStateOf(-1) }
 
     // 初始化裁剪矩形（在画布尺寸确定后）
     val isInitialized = remember { mutableStateOf(false) }
     if (canvasSize.width > 0 && displayWidth > 0 && !isInitialized.value) {
-        val margin = min(displayWidth, displayHeight) * 0.1f
-        topLeft = PointF(displayLeft + margin, displayTop + margin)
-        bottomRight = PointF(
-            displayLeft + displayWidth - margin,
-            displayTop + displayHeight - margin
-        )
+        // 如果有上一次的裁剪坐标，则将其从图片坐标转换为屏幕坐标
+        if (previousCropRect != null && previousCropRect.isValid(imageWidth, imageHeight)) {
+            // 将图片坐标转换为屏幕坐标
+            topLeft = PointF(
+                displayLeft + previousCropRect.topLeft.x * imageScale,
+                displayTop + previousCropRect.topLeft.y * imageScale
+            )
+            bottomRight = PointF(
+                displayLeft + previousCropRect.bottomRight.x * imageScale,
+                displayTop + previousCropRect.bottomRight.y * imageScale
+            )
+        } else {
+            // 使用默认的初始化区域
+            val margin = min(displayWidth, displayHeight) * 0.1f
+            topLeft = PointF(displayLeft + margin, displayTop + margin)
+            bottomRight = PointF(
+                displayLeft + displayWidth - margin,
+                displayTop + displayHeight - margin
+            )
+        }
         isInitialized.value = true
     }
 
@@ -206,16 +242,31 @@ fun ImageCropScreen(
                                 val touchX = offset.x
                                 val touchY = offset.y
 
-                                // 检测是否在左上角附近
+                                // 计算四个角的坐标
+                                val topLeftPos = topLeft
+                                val bottomRightPos = bottomRight
+                                val topRightPos = PointF(bottomRight.x, topLeft.y)
+                                val bottomLeftPos = PointF(topLeft.x, bottomRight.y)
+
+                                // 检测是否在各个角附近
                                 val topLeftDist = sqrt(
-                                    (touchX - topLeft.x) * (touchX - topLeft.x) +
-                                            (touchY - topLeft.y) * (touchY - topLeft.y)
+                                    (touchX - topLeftPos.x) * (touchX - topLeftPos.x) +
+                                            (touchY - topLeftPos.y) * (touchY - topLeftPos.y)
                                 )
 
-                                // 检测是否在右下角附近
                                 val bottomRightDist = sqrt(
-                                    (touchX - bottomRight.x) * (touchX - bottomRight.x) +
-                                            (touchY - bottomRight.y) * (touchY - bottomRight.y)
+                                    (touchX - bottomRightPos.x) * (touchX - bottomRightPos.x) +
+                                            (touchY - bottomRightPos.y) * (touchY - bottomRightPos.y)
+                                )
+
+                                val topRightDist = sqrt(
+                                    (touchX - topRightPos.x) * (touchX - topRightPos.x) +
+                                            (touchY - topRightPos.y) * (touchY - topRightPos.y)
+                                )
+
+                                val bottomLeftDist = sqrt(
+                                    (touchX - bottomLeftPos.x) * (touchX - bottomLeftPos.x) +
+                                            (touchY - bottomLeftPos.y) * (touchY - bottomLeftPos.y)
                                 )
 
                                 val touchRadius = 60f
@@ -223,6 +274,8 @@ fun ImageCropScreen(
                                 draggingCorner = when {
                                     topLeftDist < touchRadius -> 0
                                     bottomRightDist < touchRadius -> 1
+                                    topRightDist < touchRadius -> 2
+                                    bottomLeftDist < touchRadius -> 3
                                     else -> -1
                                 }
                             },
@@ -255,6 +308,36 @@ fun ImageCropScreen(
                                                 displayTop + displayHeight
                                             )
                                         )
+                                        change.consume()
+                                    }
+
+                                    2 -> {
+                                        // 拖动右上角
+                                        val newX = (bottomRight.x + dragAmount.x).coerceIn(
+                                            topLeft.x + 50f,
+                                            displayLeft + displayWidth
+                                        )
+                                        val newY = (topLeft.y + dragAmount.y).coerceIn(
+                                            displayTop,
+                                            bottomRight.y - 50f
+                                        )
+                                        bottomRight = PointF(newX, bottomRight.y)
+                                        topLeft = PointF(topLeft.x, newY)
+                                        change.consume()
+                                    }
+
+                                    3 -> {
+                                        // 拖动左下角
+                                        val newX = (topLeft.x + dragAmount.x).coerceIn(
+                                            displayLeft,
+                                            bottomRight.x - 50f
+                                        )
+                                        val newY = (bottomRight.y + dragAmount.y).coerceIn(
+                                            topLeft.y + 50f,
+                                            displayTop + displayHeight
+                                        )
+                                        topLeft = PointF(newX, topLeft.y)
+                                        bottomRight = PointF(bottomRight.x, newY)
                                         change.consume()
                                     }
                                 }
@@ -354,6 +437,30 @@ fun ImageCropScreen(
                     color = cornerColor,
                     radius = cornerRadius,
                     center = Offset(cropRight, cropBottom)
+                )
+
+                // 右上角
+                drawCircle(
+                    color = cornerStrokeColor,
+                    radius = cornerRadius + 2f,
+                    center = Offset(cropRight, cropTop)
+                )
+                drawCircle(
+                    color = cornerColor,
+                    radius = cornerRadius,
+                    center = Offset(cropRight, cropTop)
+                )
+
+                // 左下角
+                drawCircle(
+                    color = cornerStrokeColor,
+                    radius = cornerRadius + 2f,
+                    center = Offset(cropLeft, cropBottom)
+                )
+                drawCircle(
+                    color = cornerColor,
+                    radius = cornerRadius,
+                    center = Offset(cropLeft, cropBottom)
                 )
             }
 
