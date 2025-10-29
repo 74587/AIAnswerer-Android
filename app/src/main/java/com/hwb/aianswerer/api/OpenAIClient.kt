@@ -149,15 +149,25 @@ class OpenAIClient {
      *
      * @return Result<String> 成功返回"连接成功"，失败返回错误信息
      */
-    suspend fun testConnection(): Result<String> = withContext(Dispatchers.IO) {
-        try {
-            // 从配置中读取最新的API设置
-            val apiUrl = AppConfig.getApiUrl()
-            val apiKey = AppConfig.getApiKey()
-            val modelName = AppConfig.getModelName()
+    suspend fun testConnection(): Result<String> {
+        return testConnection(
+            AppConfig.getApiUrl(),
+            AppConfig.getApiKey(),
+            AppConfig.getModelName()
+        )
+    }
 
+    /**
+     * 测试API连接，支持传入未保存的配置参数
+     */
+    suspend fun testConnection(
+        apiUrl: String,
+        apiKey: String,
+        modelName: String
+    ): Result<String> = withContext(Dispatchers.IO) {
+        try {
             // 验证配置有效性
-            if (!AppConfig.isApiConfigValid()) {
+            if (!AppConfig.isApiConfigValid(apiUrl, apiKey, modelName)) {
                 return@withContext Result.failure(
                     Exception("API配置无效，请先完整配置API信息")
                 )
@@ -171,8 +181,6 @@ class OpenAIClient {
             val chatRequest = ChatRequest(
                 model = modelName,
                 messages = messages,
-                temperature = 0.3,
-                maxTokens = 10  // 限制返回token数量，加快测试速度
             )
 
             val requestBody = gson.toJson(chatRequest)

@@ -28,8 +28,8 @@ android {
         applicationId = "com.hwb.aianswerer"
         minSdk = 30
         targetSdk = 34
-        versionCode = 1
-        versionName = "0.1"
+        versionCode = 2
+        versionName = "0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -82,15 +82,16 @@ android {
     buildTypes {
         debug {
             isDebuggable = true
+            applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
         }
         release {
-            isMinifyEnabled = true  // 启用R8代码混淆和优化
-            isShrinkResources = true  // 启用资源压缩
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+//            isMinifyEnabled = true  // 启用R8代码混淆和优化
+//            isShrinkResources = true  // 启用资源压缩
+//            proguardFiles(
+//                getDefaultProguardFile("proguard-android-optimize.txt"),
+//                "proguard-rules.pro"
+//            )
             // Release签名配置
             signingConfig = signingConfigs.getByName("release")
         }

@@ -88,10 +88,11 @@ object AppConfig {
      * 验证API配置是否完整
      * @return true表示配置完整，false表示缺少必要配置
      */
-    fun isApiConfigValid(): Boolean {
-        val url = getApiUrl()
-        val key = getApiKey()
-        val model = getModelName()
+    fun isApiConfigValid(
+        url: String = getApiUrl(),
+        key: String = getApiKey(),
+        model: String = getModelName()
+    ): Boolean {
 
         return url.isNotBlank() && key.isNotBlank() && model.isNotBlank() && url.startsWith("http")
     }
@@ -129,7 +130,7 @@ object AppConfig {
      * @return 是否启用自动提交，默认为false
      */
     fun getAutoSubmit(): Boolean {
-        return mmkv.decodeBool(KEY_AUTO_SUBMIT, false)
+        return mmkv.decodeBool(KEY_AUTO_SUBMIT, true)
     }
 
     /**
@@ -145,7 +146,7 @@ object AppConfig {
      * @return 是否启用自动复制，默认为true（提升用户体验）
      */
     fun getAutoCopy(): Boolean {
-        return mmkv.decodeBool(KEY_AUTO_COPY, true)
+        return mmkv.decodeBool(KEY_AUTO_COPY, false)
     }
 
     // ========== 答题设置相关 ==========
