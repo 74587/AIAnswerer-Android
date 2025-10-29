@@ -65,9 +65,12 @@ import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.hwb.aianswerer.api.OpenAIClient
+import com.hwb.aianswerer.config.AppConfig
+import com.hwb.aianswerer.models.CropRect
 import com.hwb.aianswerer.models.formatAnswerWithConfig
 import com.hwb.aianswerer.ui.icons.LocalIcons
 import com.hwb.aianswerer.utils.ClipboardUtil
+import com.hwb.aianswerer.utils.ImageCropUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -96,9 +99,9 @@ class FloatingWindowService : Service(), LifecycleOwner, ViewModelStoreOwner,
     private var statusMessage = mutableStateOf<String?>(null)
     private var questionTypes = mutableSetOf<String>()  // 题型集合
     private var questionScope = ""  // 题目范围
-    private var cropMode = com.hwb.aianswerer.config.AppConfig.CROP_MODE_FULL  // 截图识别模式
-    private var savedCropRect: com.hwb.aianswerer.models.CropRect? = null  // 保存的裁剪坐标（单次模式）
-    private var savedCropRectEach: com.hwb.aianswerer.models.CropRect? = null  // 保存的裁剪坐标（每次模式）
+    private var cropMode = AppConfig.CROP_MODE_FULL  // 截图识别模式
+    private var savedCropRect: CropRect? = null  // 保存的裁剪坐标（单次模式）
+    private var savedCropRectEach: CropRect? = null  // 保存的裁剪坐标（每次模式）
 
     // Lifecycle
     private val lifecycleRegistry = LifecycleRegistry(this)
@@ -145,18 +148,18 @@ class FloatingWindowService : Service(), LifecycleOwner, ViewModelStoreOwner,
                         intent.getFloatExtra(ImageCropActivity.EXTRA_BOTTOM_RIGHT_Y, 0f)
 
                     if (imagePath != null) {
-                        val cropRect = com.hwb.aianswerer.models.CropRect(
+                        val cropRect = CropRect(
                             topLeft = android.graphics.PointF(topLeftX, topLeftY),
                             bottomRight = android.graphics.PointF(bottomRightX, bottomRightY)
                         )
 
                         // 根据模式保存裁剪坐标
                         when (cropMode) {
-                            com.hwb.aianswerer.config.AppConfig.CROP_MODE_ONCE -> {
+                            AppConfig.CROP_MODE_ONCE -> {
                                 savedCropRect = cropRect
                             }
 
-                            com.hwb.aianswerer.config.AppConfig.CROP_MODE_EACH -> {
+                            AppConfig.CROP_MODE_EACH -> {
                                 savedCropRectEach = cropRect
                             }
                         }
@@ -230,7 +233,7 @@ class FloatingWindowService : Service(), LifecycleOwner, ViewModelStoreOwner,
 
             if (it.hasExtra("cropMode")) {
                 cropMode = it.getStringExtra("cropMode")
-                    ?: com.hwb.aianswerer.config.AppConfig.CROP_MODE_FULL
+                    ?: AppConfig.CROP_MODE_FULL
             }
 
             // 清除保存的裁剪坐标（新答题会话）
@@ -307,20 +310,20 @@ class FloatingWindowService : Service(), LifecycleOwner, ViewModelStoreOwner,
 
                 // 根据截图识别模式处理
                 when (cropMode) {
-                    com.hwb.aianswerer.config.AppConfig.CROP_MODE_FULL -> {
+                    AppConfig.CROP_MODE_FULL -> {
                         // 全屏模式：直接识别
                         processBitmap(bitmap)
                     }
 
-                    com.hwb.aianswerer.config.AppConfig.CROP_MODE_EACH -> {
+                    AppConfig.CROP_MODE_EACH -> {
                         // 部分识别（每次）：启动裁剪Activity（传递上次的坐标）
                         launchCropActivity(bitmap, savedCropRectEach)
                     }
 
-                    com.hwb.aianswerer.config.AppConfig.CROP_MODE_ONCE -> {
+                    AppConfig.CROP_MODE_ONCE -> {
                         if (savedCropRect != null) {
                             // 已有保存的坐标：直接裁剪
-                            val croppedBitmap = com.hwb.aianswerer.utils.ImageCropUtil.cropBitmap(
+                            val croppedBitmap = ImageCropUtil.cropBitmap(
                                 bitmap,
                                 savedCropRect!!
                             )
@@ -352,12 +355,12 @@ class FloatingWindowService : Service(), LifecycleOwner, ViewModelStoreOwner,
      */
     private suspend fun launchCropActivity(
         bitmap: android.graphics.Bitmap,
-        previousCropRect: com.hwb.aianswerer.models.CropRect?
+        previousCropRect: CropRect?
     ) {
         try {
             // 保存bitmap到临时文件
             val imagePath =
-                com.hwb.aianswerer.utils.ImageCropUtil.saveBitmapToTempFile(bitmap, cacheDir)
+                ImageCropUtil.saveBitmapToTempFile(bitmap, cacheDir)
             bitmap.recycle()
 
             // 启动裁剪Activity
@@ -390,23 +393,23 @@ class FloatingWindowService : Service(), LifecycleOwner, ViewModelStoreOwner,
      */
     private fun handleCroppedImage(
         imagePath: String,
-        cropRect: com.hwb.aianswerer.models.CropRect
+        cropRect: CropRect
     ) {
         serviceScope.launch {
             try {
                 // 加载图片
-                val bitmap = com.hwb.aianswerer.utils.ImageCropUtil.loadBitmapFromFile(imagePath)
+                val bitmap = ImageCropUtil.loadBitmapFromFile(imagePath)
 
                 // 裁剪图片
                 val croppedBitmap =
-                    com.hwb.aianswerer.utils.ImageCropUtil.cropBitmap(bitmap, cropRect)
+                    ImageCropUtil.cropBitmap(bitmap, cropRect)
                 bitmap.recycle()
 
                 // 处理裁剪后的图片（OCR）
                 processBitmap(croppedBitmap)
 
                 // 清理临时文件
-                com.hwb.aianswerer.utils.ImageCropUtil.deleteTempFile(imagePath)
+                ImageCropUtil.deleteTempFile(imagePath)
             } catch (e: Exception) {
                 statusMessage.value = "❌ 裁剪失败: ${e.message}"
                 Log.e(TAG, "裁剪失败", e)
@@ -431,7 +434,7 @@ class FloatingWindowService : Service(), LifecycleOwner, ViewModelStoreOwner,
                 statusMessage.value = "✅ 识别完成"
 
                 // 从配置读取自动提交设置
-                val autoSubmit = com.hwb.aianswerer.config.AppConfig.getAutoSubmit()
+                val autoSubmit = AppConfig.getAutoSubmit()
 
                 if (autoSubmit) {
                     // 自动提交：直接调用fetchAnswer获取答案
@@ -478,9 +481,9 @@ class FloatingWindowService : Service(), LifecycleOwner, ViewModelStoreOwner,
                 statusMessage.value = "🤖 正在获取答案..."
 
                 // 从配置读取答题设置
-                val questionTypes = com.hwb.aianswerer.config.AppConfig.getQuestionTypes()
-                val questionScope = com.hwb.aianswerer.config.AppConfig.getQuestionScope()
-                val autoCopy = com.hwb.aianswerer.config.AppConfig.getAutoCopy()
+                val questionTypes = AppConfig.getQuestionTypes()
+                val questionScope = AppConfig.getQuestionScope()
+                val autoCopy = AppConfig.getAutoCopy()
 
                 val apiClient = OpenAIClient.getInstance()
                 val result = apiClient.analyzeQuestion(text, questionTypes, questionScope)
@@ -488,8 +491,8 @@ class FloatingWindowService : Service(), LifecycleOwner, ViewModelStoreOwner,
                 result.onSuccess { aiAnswer ->
                     // 读取答题卡片显示配置
                     val showQuestion =
-                        com.hwb.aianswerer.config.AppConfig.getShowAnswerCardQuestion()
-                    val showOptions = com.hwb.aianswerer.config.AppConfig.getShowAnswerCardOptions()
+                        AppConfig.getShowAnswerCardQuestion()
+                    val showOptions = AppConfig.getShowAnswerCardOptions()
 
                     // 根据配置格式化答案
                     val formattedAnswer = aiAnswer.formatAnswerWithConfig(showQuestion, showOptions)
