@@ -62,6 +62,15 @@
             android:taskAffinity=""
             android:theme="@style/Theme.TransparentActivity" />
 
+        <!-- 图片裁剪Activity -->
+        <activity
+            android:name=".ImageCropActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:taskAffinity=""
+            android:theme="@style/Theme.AIAnswerer" />
+
         <!-- 悬浮窗服务 -->
         <service
             android:name=".FloatingWindowService"

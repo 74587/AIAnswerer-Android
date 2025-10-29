@@ -36,6 +36,10 @@
     <string name="question_type_essay">Essay</string>
     <string name="question_scope_label">Question Scope (Optional)</string>
     <string name="question_scope_hint">Enter keywords or scope, leave blank for no limit</string>
+    <string name="crop_mode_label">Screenshot Recognition Mode</string>
+    <string name="crop_mode_full">Full Screen</string>
+    <string name="crop_mode_each">Partial (Each Time)</string>
+    <string name="crop_mode_once">Partial (Once)</string>
     <string name="model_settings_card_title">Model Settings</string>
     <string name="model_settings_card_desc">Configure API and model parameters</string>
     <string name="current_settings">Current: %s</string>
@@ -138,4 +142,12 @@
     <string name="dialog_model_setup_message">To use the AI answering feature, you need to configure API parameters first. Go to settings now?</string>
     <string name="dialog_model_setup_confirm">Go to Settings</string>
     <string name="dialog_model_setup_cancel">Cancel</string>
+
+    <!-- Image Crop Activity -->
+    <string name="crop_title">Select Recognition Area</string>
+    <string name="crop_instruction">Drag corners to adjust recognition area</string>
+    <string name="crop_zoom_hint">Pinch to zoom and drag image</string>
+    <string name="crop_confirm">Confirm</string>
+    <string name="crop_cancel">Cancel</string>
+    <string name="crop_reset">Reset</string>
 </resources>

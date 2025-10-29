@@ -21,10 +21,16 @@ object AppConfig {
     private const val KEY_QUESTION_TYPES = "question_types"
     private const val KEY_QUESTION_SCOPE = "question_scope"
     private const val KEY_IS_FIRST_LAUNCH = "is_first_launch"
+    private const val KEY_CROP_MODE = "crop_mode"
 
     // 语言代码常量
     const val LANGUAGE_ZH = "zh"
     const val LANGUAGE_EN = "en"
+
+    // 截图识别模式常量
+    const val CROP_MODE_FULL = "full"           // 全屏
+    const val CROP_MODE_EACH = "each"           // 部分识别（每次）
+    const val CROP_MODE_ONCE = "once"           // 部分识别（单次）
 
     private lateinit var mmkv: MMKV
 
@@ -187,6 +193,24 @@ object AppConfig {
      */
     fun getQuestionScope(): String {
         return mmkv.decodeString(KEY_QUESTION_SCOPE, "") ?: ""
+    }
+
+    // ========== 截图识别模式相关 ==========
+
+    /**
+     * 保存截图识别模式
+     * @param mode 识别模式（CROP_MODE_FULL/CROP_MODE_EACH/CROP_MODE_ONCE）
+     */
+    fun saveCropMode(mode: String) {
+        mmkv.encode(KEY_CROP_MODE, mode)
+    }
+
+    /**
+     * 获取截图识别模式
+     * @return 识别模式，默认为全屏模式
+     */
+    fun getCropMode(): String {
+        return mmkv.decodeString(KEY_CROP_MODE, CROP_MODE_FULL) ?: CROP_MODE_FULL
     }
 
     // ========== 首次启动相关 ==========

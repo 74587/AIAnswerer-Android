@@ -10,6 +10,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,6 +35,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -73,6 +75,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var defaultQuestionType: String
     private var selectedQuestionTypes by mutableStateOf<Set<String>>(emptySet())
     private var questionScope by mutableStateOf("")
+    private var cropMode by mutableStateOf(AppConfig.CROP_MODE_FULL)
 
     // Dialog状态管理
     private var showLanguageDialog by mutableStateOf(false)
@@ -141,6 +144,7 @@ class MainActivity : ComponentActivity() {
         // 加载答题设置
         selectedQuestionTypes = AppConfig.getQuestionTypes()
         questionScope = AppConfig.getQuestionScope()
+        cropMode = AppConfig.getCropMode()
 
         // 检查并添加Dialog到队列
         checkAndQueueDialogs()
@@ -151,6 +155,7 @@ class MainActivity : ComponentActivity() {
                     isAnswerModeActive = isAnswerModeActive,
                     selectedQuestionTypes = selectedQuestionTypes,
                     questionScope = questionScope,
+                    cropMode = cropMode,
                     showLanguageDialog = showLanguageDialog,
                     showModelSetupDialog = showModelSetupDialog,
                     onToggleAnswerMode = {
@@ -167,6 +172,10 @@ class MainActivity : ComponentActivity() {
                     onQuestionScopeChanged = { scope ->
                         questionScope = scope
                         AppConfig.saveQuestionScope(scope)
+                    },
+                    onCropModeChanged = { mode ->
+                        cropMode = mode
+                        AppConfig.saveCropMode(mode)
                     },
                     onLanguageDialogDismiss = { dismissLanguageDialog() },
                     onLanguageConfirmed = { handleLanguageConfirmed() },
@@ -241,6 +250,7 @@ class MainActivity : ComponentActivity() {
             // 传递答题设置
             putStringArrayListExtra("questionTypes", ArrayList(selectedQuestionTypes))
             putExtra("questionScope", questionScope)
+            putExtra("cropMode", cropMode)
         }
 
         // Android 8.0+ 使用 startForegroundService，否则使用 startService
@@ -366,11 +376,13 @@ fun MainScreen(
     isAnswerModeActive: Boolean = false,
     selectedQuestionTypes: Set<String> = setOf("单选题"),
     questionScope: String = "",
+    cropMode: String = AppConfig.CROP_MODE_FULL,
     showLanguageDialog: Boolean = false,
     showModelSetupDialog: Boolean = false,
     onToggleAnswerMode: () -> Unit = {},
     onQuestionTypesChanged: (Set<String>) -> Unit = {},
     onQuestionScopeChanged: (String) -> Unit = {},
+    onCropModeChanged: (String) -> Unit = {},
     onLanguageDialogDismiss: () -> Unit = {},
     onLanguageConfirmed: () -> Unit = {},
     onModelSetupDismiss: () -> Unit = {},
@@ -417,7 +429,7 @@ fun MainScreen(
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
                         .padding(horizontal = 24.dp)
-                        .padding(bottom = 88.dp), // 底部padding为按钮高度(56dp) + 间距(32dp)
+                        .padding(bottom = 96.dp), // 底部padding为按钮高度(56dp) + 按钮padding(16dp*2) + 额外间距(8dp)
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Top
                 ) {
@@ -500,8 +512,10 @@ fun MainScreen(
                     SessionSettingsCard(
                         selectedQuestionTypes = selectedQuestionTypes,
                         questionScope = questionScope,
+                        cropMode = cropMode,
                         onQuestionTypesChanged = onQuestionTypesChanged,
                         onQuestionScopeChanged = onQuestionScopeChanged,
+                        onCropModeChanged = onCropModeChanged,
                         enabled = !isAnswerModeActive
                     )
                 }
@@ -575,12 +589,6 @@ fun FeatureItem(
             .padding(vertical = 4.dp),
         verticalAlignment = Alignment.Top
     ) {
-        Text(
-            text = "•",
-            modifier = Modifier.padding(end = 8.dp),
-            style = bodyMediumStyle
-        )
-
         // 如果有链接参数，构建带链接的文本
         if (urlText != null && url != null) {
             val annotatedString = remember(text, urlText, url, primaryColor) {
@@ -650,8 +658,10 @@ fun FeatureItem(
 fun SessionSettingsCard(
     selectedQuestionTypes: Set<String>,
     questionScope: String,
+    cropMode: String,
     onQuestionTypesChanged: (Set<String>) -> Unit,
     onQuestionScopeChanged: (String) -> Unit,
+    onCropModeChanged: (String) -> Unit,
     enabled: Boolean = true
 ) {
     // 所有可选的题型
@@ -681,7 +691,7 @@ fun SessionSettingsCard(
                 text = stringResource(R.string.session_settings_desc),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(bottom = 12.dp)
+                modifier = Modifier.padding(bottom = 8.dp)
             )
 
             // 题型选择标签
@@ -689,14 +699,14 @@ fun SessionSettingsCard(
                 text = stringResource(R.string.question_type_label),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(bottom = 8.dp)
+                modifier = Modifier.padding(bottom = 6.dp)
             )
 
             // 题型多选Chips
             FlowRow(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy((-6).dp)
             ) {
                 allQuestionTypes.forEach { type ->
                     val isSelected = selectedQuestionTypes.contains(type)
@@ -741,7 +751,88 @@ fun SessionSettingsCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // 截图识别模式选择
+            Text(
+                text = stringResource(R.string.crop_mode_label),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.padding(bottom = 6.dp)
+            )
+
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy((-8).dp)
+            ) {
+                // 全屏识别
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(enabled = enabled) {
+                            onCropModeChanged(AppConfig.CROP_MODE_FULL)
+                        }
+                        .padding(vertical = 0.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(
+                        selected = cropMode == AppConfig.CROP_MODE_FULL,
+                        onClick = { onCropModeChanged(AppConfig.CROP_MODE_FULL) },
+                        enabled = enabled
+                    )
+                    Text(
+                        text = stringResource(R.string.crop_mode_full),
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
+
+                // 部分识别（每次）
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(enabled = enabled) {
+                            onCropModeChanged(AppConfig.CROP_MODE_EACH)
+                        }
+                        .padding(vertical = 0.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(
+                        selected = cropMode == AppConfig.CROP_MODE_EACH,
+                        onClick = { onCropModeChanged(AppConfig.CROP_MODE_EACH) },
+                        enabled = enabled
+                    )
+                    Text(
+                        text = stringResource(R.string.crop_mode_each),
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
+
+                // 部分识别（单次）
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(enabled = enabled) {
+                            onCropModeChanged(AppConfig.CROP_MODE_ONCE)
+                        }
+                        .padding(vertical = 0.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(
+                        selected = cropMode == AppConfig.CROP_MODE_ONCE,
+                        onClick = { onCropModeChanged(AppConfig.CROP_MODE_ONCE) },
+                        enabled = enabled
+                    )
+                    Text(
+                        text = stringResource(R.string.crop_mode_once),
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
 
             // 题目内容范围输入
             OutlinedTextField(

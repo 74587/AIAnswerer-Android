@@ -95,6 +95,8 @@ class FloatingWindowService : Service(), LifecycleOwner, ViewModelStoreOwner,
     private var statusMessage = mutableStateOf<String?>(null)
     private var questionTypes = mutableSetOf<String>()  // 题型集合
     private var questionScope = ""  // 题目范围
+    private var cropMode = com.hwb.aianswerer.config.AppConfig.CROP_MODE_FULL  // 截图识别模式
+    private var savedCropRect: com.hwb.aianswerer.models.CropRect? = null  // 保存的裁剪坐标（单次模式）
 
     // Lifecycle
     private val lifecycleRegistry = LifecycleRegistry(this)
@@ -112,7 +114,6 @@ class FloatingWindowService : Service(), LifecycleOwner, ViewModelStoreOwner,
 
     private val answerReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            Log.d(TAG, "answerReceiver.onReceive 被调用: action=${intent?.action}")
             when (intent?.action) {
                 Constants.ACTION_SHOW_ANSWER -> {
                     // 直接显示已获取的答案（向后兼容）
@@ -120,9 +121,6 @@ class FloatingWindowService : Service(), LifecycleOwner, ViewModelStoreOwner,
                     if (!answer.isNullOrBlank()) {
                         answerText.value = answer
                         showAnswer.value = true
-                        Log.d(TAG, "收到显示答案广播")
-                    } else {
-                        Log.w(TAG, "ACTION_SHOW_ANSWER 广播收到但答案为空")
                     }
                 }
 
@@ -130,18 +128,46 @@ class FloatingWindowService : Service(), LifecycleOwner, ViewModelStoreOwner,
                     // 接收问题文本，调用API获取答案
                     val questionText = intent.getStringExtra(Constants.EXTRA_QUESTION_TEXT)
                     if (!questionText.isNullOrBlank()) {
-                        Log.d(TAG, "收到请求答案广播，问题文本长度: ${questionText.length}")
                         fetchAnswer(questionText)
-                    } else {
-                        Log.w(TAG, "ACTION_REQUEST_ANSWER 广播收到但问题文本为空")
+                    }
+                }
+
+                ACTION_CROP_RESULT -> {
+                    // 接收裁剪结果
+                    val imagePath = intent.getStringExtra(EXTRA_IMAGE_PATH)
+                    val topLeftX = intent.getFloatExtra(ImageCropActivity.EXTRA_TOP_LEFT_X, 0f)
+                    val topLeftY = intent.getFloatExtra(ImageCropActivity.EXTRA_TOP_LEFT_Y, 0f)
+                    val bottomRightX =
+                        intent.getFloatExtra(ImageCropActivity.EXTRA_BOTTOM_RIGHT_X, 0f)
+                    val bottomRightY =
+                        intent.getFloatExtra(ImageCropActivity.EXTRA_BOTTOM_RIGHT_Y, 0f)
+
+                    if (imagePath != null) {
+                        val cropRect = com.hwb.aianswerer.models.CropRect(
+                            topLeft = android.graphics.PointF(topLeftX, topLeftY),
+                            bottomRight = android.graphics.PointF(bottomRightX, bottomRightY)
+                        )
+
+                        // 如果是单次模式，保存裁剪坐标
+                        if (cropMode == com.hwb.aianswerer.config.AppConfig.CROP_MODE_ONCE) {
+                            savedCropRect = cropRect
+                        }
+
+                        // 处理裁剪后的图片
+                        handleCroppedImage(imagePath, cropRect)
                     }
                 }
 
                 else -> {
-                    Log.w(TAG, "收到未知的广播 Action: ${intent?.action}")
+                    // 忽略未知广播
                 }
             }
         }
+    }
+
+    companion object {
+        const val ACTION_CROP_RESULT = "com.hwb.aianswerer.ACTION_CROP_RESULT"
+        const val EXTRA_IMAGE_PATH = "image_path"
     }
 
     override fun onCreate() {
@@ -155,16 +181,12 @@ class FloatingWindowService : Service(), LifecycleOwner, ViewModelStoreOwner,
         // 注册广播接收器
         val filter = IntentFilter(Constants.ACTION_SHOW_ANSWER)
         filter.addAction(Constants.ACTION_REQUEST_ANSWER)
-        Log.d(
-            TAG,
-            "注册广播接收器，Actions: ${Constants.ACTION_SHOW_ANSWER}, ${Constants.ACTION_REQUEST_ANSWER}"
-        )
+        filter.addAction(ACTION_CROP_RESULT)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(answerReceiver, filter, RECEIVER_NOT_EXPORTED)
         } else {
             registerReceiver(answerReceiver, filter)
         }
-        Log.d(TAG, "广播接收器注册成功")
 
         createNotificationChannel()
         startForeground(Constants.NOTIFICATION_ID, createNotification())
@@ -183,7 +205,6 @@ class FloatingWindowService : Service(), LifecycleOwner, ViewModelStoreOwner,
                 val data = it.getParcelableExtra<Intent>("data")
                 if (resultCode == Activity.RESULT_OK && data != null) {
                     screenCaptureManager?.initMediaProjection(resultCode, data)
-                    Log.d(TAG, "MediaProjection已初始化")
                 }
             }
 
@@ -192,14 +213,20 @@ class FloatingWindowService : Service(), LifecycleOwner, ViewModelStoreOwner,
                 val typesList = it.getStringArrayListExtra("questionTypes")
                 if (typesList != null) {
                     questionTypes = typesList.toMutableSet()
-                    Log.d(TAG, "题型设置: $questionTypes")
                 }
             }
 
             if (it.hasExtra("questionScope")) {
                 questionScope = it.getStringExtra("questionScope") ?: ""
-                Log.d(TAG, "题目范围: $questionScope")
             }
+
+            if (it.hasExtra("cropMode")) {
+                cropMode = it.getStringExtra("cropMode")
+                    ?: com.hwb.aianswerer.config.AppConfig.CROP_MODE_FULL
+            }
+
+            // 清除保存的裁剪坐标（新答题会话）
+            savedCropRect = null
         }
         return START_STICKY
     }
@@ -269,40 +296,31 @@ class FloatingWindowService : Service(), LifecycleOwner, ViewModelStoreOwner,
                     return@launch
                 }
 
-                statusMessage.value = "🔍 正在识别文字..."
-
-                // 识别文本
-                val result = textRecognitionManager.recognizeText(bitmap)
-
-                result.onSuccess { recognizedText ->
-                    statusMessage.value = "✅ 识别完成"
-
-                    // 从配置读取自动提交设置
-                    val autoSubmit = com.hwb.aianswerer.config.AppConfig.getAutoSubmit()
-
-                    if (autoSubmit) {
-                        // 自动提交：直接调用fetchAnswer获取答案
-                        fetchAnswer(recognizedText)
-                    } else {
-                        // 显示确认对话框
-                        val intent = Intent(
-                            this@FloatingWindowService,
-                            ConfirmTextActivity::class.java
-                        ).apply {
-                            putExtra(Constants.EXTRA_RECOGNIZED_TEXT, recognizedText)
-                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        }
-                        startActivity(intent)
-                        // 2秒后自动关闭状态消息
-                        delay(2000)
-                        statusMessage.value = null
+                // 根据截图识别模式处理
+                when (cropMode) {
+                    com.hwb.aianswerer.config.AppConfig.CROP_MODE_FULL -> {
+                        // 全屏模式：直接识别
+                        processBitmap(bitmap)
                     }
-                }.onFailure { error ->
-                    statusMessage.value = "❌ 文字识别失败: ${error.message}"
-                    // 5秒后自动关闭错误消息
-                    delay(5000)
-                    if (statusMessage.value?.startsWith("❌") == true) {
-                        statusMessage.value = null
+
+                    com.hwb.aianswerer.config.AppConfig.CROP_MODE_EACH -> {
+                        // 部分识别（每次）：启动裁剪Activity
+                        launchCropActivity(bitmap)
+                    }
+
+                    com.hwb.aianswerer.config.AppConfig.CROP_MODE_ONCE -> {
+                        if (savedCropRect != null) {
+                            // 已有保存的坐标：直接裁剪
+                            val croppedBitmap = com.hwb.aianswerer.utils.ImageCropUtil.cropBitmap(
+                                bitmap,
+                                savedCropRect!!
+                            )
+                            bitmap.recycle()
+                            processBitmap(croppedBitmap)
+                        } else {
+                            // 没有坐标：启动裁剪Activity
+                            launchCropActivity(bitmap)
+                        }
                     }
                 }
 
@@ -314,6 +332,117 @@ class FloatingWindowService : Service(), LifecycleOwner, ViewModelStoreOwner,
                 if (statusMessage.value?.startsWith("❌") == true) {
                     statusMessage.value = null
                 }
+            }
+        }
+    }
+
+    /**
+     * 启动裁剪Activity
+     */
+    private suspend fun launchCropActivity(bitmap: android.graphics.Bitmap) {
+        try {
+            // 保存bitmap到临时文件
+            val imagePath =
+                com.hwb.aianswerer.utils.ImageCropUtil.saveBitmapToTempFile(bitmap, cacheDir)
+            bitmap.recycle()
+
+            // 启动裁剪Activity
+            val intent = Intent(this, ImageCropActivity::class.java).apply {
+                putExtra(ImageCropActivity.EXTRA_IMAGE_PATH, imagePath)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            startActivity(intent)
+
+            statusMessage.value = "✂️ 请选择识别区域..."
+            delay(2000)
+            statusMessage.value = null
+        } catch (e: Exception) {
+            statusMessage.value = "❌ 启动裁剪失败: ${e.message}"
+            Log.e(TAG, "启动裁剪失败", e)
+            delay(5000)
+            statusMessage.value = null
+        }
+    }
+
+    /**
+     * 处理裁剪后的图片
+     */
+    private fun handleCroppedImage(
+        imagePath: String,
+        cropRect: com.hwb.aianswerer.models.CropRect
+    ) {
+        serviceScope.launch {
+            try {
+                // 加载图片
+                val bitmap = com.hwb.aianswerer.utils.ImageCropUtil.loadBitmapFromFile(imagePath)
+
+                // 裁剪图片
+                val croppedBitmap =
+                    com.hwb.aianswerer.utils.ImageCropUtil.cropBitmap(bitmap, cropRect)
+                bitmap.recycle()
+
+                // 处理裁剪后的图片（OCR）
+                processBitmap(croppedBitmap)
+
+                // 清理临时文件
+                com.hwb.aianswerer.utils.ImageCropUtil.deleteTempFile(imagePath)
+            } catch (e: Exception) {
+                statusMessage.value = "❌ 裁剪失败: ${e.message}"
+                Log.e(TAG, "裁剪失败", e)
+                delay(5000)
+                statusMessage.value = null
+            }
+        }
+    }
+
+    /**
+     * 处理bitmap（OCR识别）
+     */
+    private suspend fun processBitmap(bitmap: android.graphics.Bitmap) {
+        try {
+            statusMessage.value = "🔍 正在识别文字..."
+
+            // 识别文本
+            val result = textRecognitionManager.recognizeText(bitmap)
+            bitmap.recycle()
+
+            result.onSuccess { recognizedText ->
+                statusMessage.value = "✅ 识别完成"
+
+                // 从配置读取自动提交设置
+                val autoSubmit = com.hwb.aianswerer.config.AppConfig.getAutoSubmit()
+
+                if (autoSubmit) {
+                    // 自动提交：直接调用fetchAnswer获取答案
+                    fetchAnswer(recognizedText)
+                } else {
+                    // 显示确认对话框
+                    val intent = Intent(
+                        this@FloatingWindowService,
+                        ConfirmTextActivity::class.java
+                    ).apply {
+                        putExtra(Constants.EXTRA_RECOGNIZED_TEXT, recognizedText)
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    startActivity(intent)
+                    // 2秒后自动关闭状态消息
+                    delay(2000)
+                    statusMessage.value = null
+                }
+            }.onFailure { error ->
+                statusMessage.value = "❌ 文字识别失败: ${error.message}"
+                // 5秒后自动关闭错误消息
+                delay(5000)
+                if (statusMessage.value?.startsWith("❌") == true) {
+                    statusMessage.value = null
+                }
+            }
+        } catch (e: Exception) {
+            statusMessage.value = "❌ 识别失败: ${e.message}"
+            Log.e(TAG, "识别失败", e)
+            delay(5000)
+            if (statusMessage.value?.startsWith("❌") == true) {
+                statusMessage.value = null
             }
         }
     }

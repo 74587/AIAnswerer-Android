@@ -36,6 +36,10 @@
     <string name="question_type_essay">问答题</string>
     <string name="question_scope_label">题目内容范围（可选）</string>
     <string name="question_scope_hint">输入题目关键词或范围，留空则不限制</string>
+    <string name="crop_mode_label">截图识别模式</string>
+    <string name="crop_mode_full">全屏识别</string>
+    <string name="crop_mode_each">部分识别（每次）</string>
+    <string name="crop_mode_once">部分识别（单次）</string>
     <string name="model_settings_card_title">模型设置</string>
     <string name="model_settings_card_desc">配置API和模型参数</string>
     <string name="current_settings">当前设置：%s</string>
@@ -139,4 +143,12 @@
     <string name="dialog_model_setup_message">为了使用AI答题功能，您需要先配置API参数。是否立即前往设置？</string>
     <string name="dialog_model_setup_confirm">前往设置</string>
     <string name="dialog_model_setup_cancel">取消</string>
+
+    <!-- Image Crop Activity -->
+    <string name="crop_title">选择识别区域</string>
+    <string name="crop_instruction">拖动四个角调整识别区域</string>
+    <string name="crop_zoom_hint">双指缩放和拖动图片</string>
+    <string name="crop_confirm">确认</string>
+    <string name="crop_cancel">取消</string>
+    <string name="crop_reset">重置</string>
 </resources>
