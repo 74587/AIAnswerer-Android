@@ -637,6 +637,10 @@ fun UsageGuideCard(context: Context) {
                         urlText = stringResource(R.string.usage_step_7_link),
                         url = stringResource(R.string.usage_step_7_url)
                     )
+                    FeatureItem(
+                        context = context,
+                        text = stringResource(R.string.usage_step_8)
+                    )
                 }
             }
         }

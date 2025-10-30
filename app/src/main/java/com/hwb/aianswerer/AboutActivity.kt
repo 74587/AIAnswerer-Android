@@ -1,8 +1,10 @@
 package com.hwb.aianswerer
 
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.clickable
@@ -31,6 +33,7 @@ import com.hwb.aianswerer.ui.components.InfoCard
 import com.hwb.aianswerer.ui.components.LibraryItem
 import com.hwb.aianswerer.ui.components.TopBarWithBack
 import com.hwb.aianswerer.ui.theme.AIAnswererTheme
+import com.hwb.aianswerer.utils.ClipboardUtil
 import com.hwb.aianswerer.utils.LanguageUtil
 
 /**
@@ -54,6 +57,16 @@ class AboutActivity : ComponentActivity() {
             }
         }
     }
+}
+
+private fun handleContactFallback(
+    context: Context,
+    email: String,
+    label: String,
+    toastMessage: String
+) {
+    ClipboardUtil.copyToClipboard(context, email, label)
+    Toast.makeText(context, toastMessage, Toast.LENGTH_SHORT).show()
 }
 
 /**
@@ -166,8 +179,55 @@ fun AboutScreen(
                 }
             }
 
+            InfoCard(
+                title = stringResource(R.string.about_contact_title),
+                modifier = Modifier.padding(bottom = 16.dp)
+            ) {
+                val email = stringResource(R.string.about_contact_email)
+                val emailIntentTitle = stringResource(R.string.about_contact_email_intent_title)
+                val emailCopiedMessage = stringResource(R.string.about_contact_email_copied, email)
+                val emailLabel = stringResource(R.string.about_contact_title)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            context?.let { ctx ->
+                                val intent = Intent(
+                                    Intent.ACTION_SENDTO,
+                                    "mailto:$email".toUri()
+                                )
+                                try {
+                                    val chooser = Intent.createChooser(intent, emailIntentTitle)
+                                    ctx.startActivity(chooser)
+                                } catch (e: ActivityNotFoundException) {
+                                    handleContactFallback(
+                                        ctx,
+                                        email,
+                                        emailLabel,
+                                        emailCopiedMessage
+                                    )
+                                } catch (e: Exception) {
+                                    handleContactFallback(
+                                        ctx,
+                                        email,
+                                        emailLabel,
+                                        emailCopiedMessage
+                                    )
+                                }
+                            }
+                        }
+                        .padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = email,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
-

@@ -67,7 +67,7 @@ class OpenAIClient {
             // 验证配置有效性
             if (!AppConfig.isApiConfigValid()) {
                 return@withContext Result.failure(
-                    Exception("API配置无效，请在设置中配置API信息")
+                    Exception(MyApplication.getString(R.string.error_api_config_invalid))
                 )
             }
 
@@ -75,7 +75,13 @@ class OpenAIClient {
             val systemPrompt = Constants.buildSystemPrompt(questionTypes, questionScope)
             val messages = listOf(
                 ChatMessage(role = "system", content = systemPrompt),
-                ChatMessage(role = "user", content = "请分析以下题目：\n\n$recognizedText")
+                ChatMessage(
+                    role = "user",
+                    content = MyApplication.getString(
+                        R.string.system_prompt_user_message,
+                        recognizedText
+                    )
+                )
             )
 
             val chatRequest = ChatRequest(
@@ -100,7 +106,13 @@ class OpenAIClient {
 
             if (!response.isSuccessful) {
                 return@withContext Result.failure(
-                    Exception("API请求失败: ${response.code} ${response.message}")
+                    Exception(
+                        MyApplication.getString(
+                            R.string.error_api_request_failed,
+                            response.code,
+                            response.message
+                        )
+                    )
                 )
             }
 
@@ -122,7 +134,7 @@ class OpenAIClient {
 
             // 解析AI返回的JSON答案
             val aiAnswer = try {
-                gson.fromJson(answerContent, AIAnswer::class.java)
+                gson.fromJson(extractJsonPayload(answerContent), AIAnswer::class.java)
             } catch (e: JsonSyntaxException) {
                 // 如果解析失败，尝试提取文本作为答案
                 AIAnswer(
@@ -140,21 +152,58 @@ class OpenAIClient {
     }
 
     /**
-     * 测试API连接
-     *
-     * 发送简单的"hello"消息到配置的API端点，验证：
-     * - API地址是否可达
-     * - API密钥是否有效
-     * - 模型名称是否正确
-     *
-     * @return Result<String> 成功返回"连接成功"，失败返回错误信息
+     * 提取 content 中的首个 JSON 负载（兼容 ```json 代码块 或 纯文本里含 JSON）.
+     * 返回去壳后的纯 JSON 字符串（对象或数组）。
      */
-    suspend fun testConnection(): Result<String> {
-        return testConnection(
-            AppConfig.getApiUrl(),
-            AppConfig.getApiKey(),
-            AppConfig.getModelName()
-        )
+    fun extractJsonPayload(content: String): String {
+        val s = content.trim()
+
+        // 1) 优先匹配 Markdown 代码块 ```...```，含可选语言标记
+        val fenceRegex = Regex("(?s)```\\s*([a-zA-Z0-9_-]+)?\\s*(\\{.*?\\}|\\[.*?\\])\\s*```")
+        fenceRegex.find(s)?.let { m ->
+            return m.groupValues[2].trim()
+        }
+
+        // 2) 无代码块：从首个 '{' 或 '[' 开始，做括号配对提取
+        val start = sequenceOf(s.indexOf('{'), s.indexOf('['))
+            .filter { it >= 0 }
+            .minOrNull() ?: return s // 找不到就原样返回（让 Gson 去判断）
+
+        val openChar = s[start]
+        val closeChar = if (openChar == '{') '}' else ']'
+
+        var depth = 0
+        var inString = false
+        var escape = false
+        var end = -1
+
+        for (i in start until s.length) {
+            val c = s[i]
+            if (inString) {
+                if (escape) {
+                    escape = false
+                } else {
+                    if (c == '\\') escape = true
+                    else if (c == '"') inString = false
+                }
+            } else {
+                if (c == '"') inString = true
+                else if (c == openChar) depth++
+                else if (c == closeChar) {
+                    depth--
+                    if (depth == 0) {
+                        end = i
+                        break
+                    }
+                }
+            }
+        }
+        if (end != -1) {
+            return s.substring(start, end + 1).trim()
+        }
+
+        // 3) 兜底：返回原文（可能是已是纯 JSON）
+        return s
     }
 
     /**
@@ -169,7 +218,7 @@ class OpenAIClient {
             // 验证配置有效性
             if (!AppConfig.isApiConfigValid(apiUrl, apiKey, modelName)) {
                 return@withContext Result.failure(
-                    Exception("API配置无效，请先完整配置API信息")
+                    Exception(MyApplication.getString(R.string.error_api_config_incomplete))
                 )
             }
 
@@ -199,41 +248,52 @@ class OpenAIClient {
             // 检查响应状态
             if (!response.isSuccessful) {
                 val errorMessage = when (response.code) {
-                    401 -> "API密钥无效或已过期"
-                    403 -> "无权访问该API"
-                    404 -> "API地址错误"
-                    429 -> "请求过于频繁，请稍后再试"
-                    500, 502, 503 -> "API服务器错误"
-                    else -> "HTTP ${response.code}: ${response.message}"
-                }
+                    401 -> R.string.error_api_key_invalid
+                    403 -> R.string.error_api_forbidden
+                    404 -> R.string.error_api_not_found
+                    429 -> R.string.error_api_rate_limited
+                    500, 502, 503 -> R.string.error_api_server_error
+                    else -> null
+                }?.let { MyApplication.getString(it) }
+                    ?: MyApplication.getString(
+                        R.string.error_http_status_generic,
+                        response.code,
+                        response.message
+                    )
                 return@withContext Result.failure(Exception(errorMessage))
             }
 
             // 验证响应体存在
             val responseBody = response.body?.string()
             if (responseBody.isNullOrBlank()) {
-                return@withContext Result.failure(Exception("API返回空响应"))
+                return@withContext Result.failure(
+                    Exception(MyApplication.getString(R.string.error_api_empty_response))
+                )
             }
 
             // 尝试解析响应以验证格式正确
             try {
                 val chatResponse = gson.fromJson(responseBody, ChatResponse::class.java)
                 if (chatResponse.choices.isEmpty()) {
-                    return@withContext Result.failure(Exception("API响应格式异常"))
+                    return@withContext Result.failure(
+                        Exception(MyApplication.getString(R.string.error_api_response_invalid))
+                    )
                 }
             } catch (e: JsonSyntaxException) {
-                return@withContext Result.failure(Exception("API响应格式错误"))
+                return@withContext Result.failure(
+                    Exception(MyApplication.getString(R.string.error_api_response_error))
+                )
             }
 
             // 测试成功
             Result.success(MyApplication.getString(R.string.toast_connection_success))
 
         } catch (e: java.net.UnknownHostException) {
-            Result.failure(Exception("Unable to connect to server, please check network and API URL"))
+            Result.failure(Exception(MyApplication.getString(R.string.error_api_unknown_host)))
         } catch (e: java.net.SocketTimeoutException) {
-            Result.failure(Exception("Connection timeout, please check network"))
+            Result.failure(Exception(MyApplication.getString(R.string.error_api_timeout)))
         } catch (e: javax.net.ssl.SSLException) {
-            Result.failure(Exception("SSL connection error, please check API URL"))
+            Result.failure(Exception(MyApplication.getString(R.string.error_api_ssl)))
         } catch (e: Exception) {
             val unknownError = MyApplication.getString(R.string.error_unknown)
             Result.failure(

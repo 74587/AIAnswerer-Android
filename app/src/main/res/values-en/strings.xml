@@ -23,6 +23,7 @@
     <string name="usage_step_7_text">7. If you see "System has denied access permission to this app" when granting overlay permission</string>
     <string name="usage_step_7_link">Please manually enable "Display over other apps"</string>
     <string name="usage_step_7_url" translatable="false">https://bbs.oneplus.com/thread/5077724</string>
+    <string name="usage_step_8">8. For better recognition, crop to a single question. Multiple-question images are not supported yet</string>
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>
@@ -90,6 +91,10 @@
     <string name="about_language_title">Language Settings</string>
     <string name="about_language_chinese">简体中文</string>
     <string name="about_language_english">English</string>
+    <string name="about_contact_title">Contact Email</string>
+    <string name="about_contact_email" translatable="false">hwang@linux.do</string>
+    <string name="about_contact_email_intent_title">Contact via Email</string>
+    <string name="about_contact_email_copied">Email copied to clipboard: %s</string>
     <string name="about_restart_dialog_title">Restart App</string>
     <string name="about_restart_dialog_message">App needs to restart to switch language. Confirm restart?</string>
     <string name="button_confirm">Confirm</string>
@@ -133,6 +138,21 @@
     <string name="error_parse_question_failed">Failed to parse question</string>
     <string name="error_connection_test_failed">Connection test failed: %s</string>
     <string name="error_unknown">Unknown error</string>
+    <string name="error_api_config_invalid">API configuration is invalid. Please configure the API in settings.</string>
+    <string name="error_api_request_failed">API request failed: %1$d %2$s</string>
+    <string name="error_api_config_incomplete">API configuration is invalid. Please complete all API settings first.</string>
+    <string name="error_api_key_invalid">API key is invalid or expired.</string>
+    <string name="error_api_forbidden">Access to this API is forbidden.</string>
+    <string name="error_api_not_found">API endpoint not found.</string>
+    <string name="error_api_rate_limited">Too many requests. Please try again later.</string>
+    <string name="error_api_server_error">API server error.</string>
+    <string name="error_http_status_generic">HTTP %1$d: %2$s</string>
+    <string name="error_api_empty_response">API returned an empty response.</string>
+    <string name="error_api_response_invalid">API response format is invalid.</string>
+    <string name="error_api_response_error">API response format error.</string>
+    <string name="error_api_unknown_host">Unable to connect to the server. Please check the network and API URL.</string>
+    <string name="error_api_timeout">Connection timed out. Please check the network.</string>
+    <string name="error_api_ssl">SSL connection error. Please check the API URL.</string>
 
     <!-- Text Recognition -->
     <string name="error_no_text_recognized">No text recognized</string>
@@ -144,6 +164,11 @@
 
     <!-- Question Type Default -->
     <string name="default_question_type">Single Choice</string>
+
+    <!-- Answer Display Panel -->
+    <string name="answer_section_question_title">Question</string>
+    <string name="answer_section_options_title">Options</string>
+    <string name="answer_section_answer_title">Answer</string>
 
     <!-- Dialog related strings -->
     <string name="dialog_language_title">选择语言 / Select Language</string>
@@ -163,4 +188,54 @@
     <string name="crop_confirm">Confirm</string>
     <string name="crop_cancel">Cancel</string>
     <string name="crop_reset">Reset</string>
+
+    <!-- AI System Prompt -->
+    <string name="ai_question_type_choice">Multiple Choice</string>
+    <string name="ai_question_type_essay">Essay</string>
+    <string name="ai_question_type_blank">Fill in the Blank</string>
+    <string name="system_prompt_type_separator">, </string>
+    <string name="system_prompt_limit_header">## Constraints</string>
+    <string name="system_prompt_type_template">Only handle the following question types: %1$s. If a question does not match, set questionType="%2$s".</string>
+    <string name="system_prompt_scope_template">Limit the question scope to: %1$s. Prioritize knowledge within this scope when answering.</string>
+    <string name="system_prompt_user_message">Please analyze the following question:\n\n%1$s</string>
+    <string name="system_prompt_base"><![CDATA[You are a rigorous structured answering assistant. Read the question text provided by the user, extract the stem, type, options, and answer, and return valid JSON only. Do not output anything other than JSON (no explanations, no Markdown, no comments).
+
+## Output Requirements
+- If the input contains only one question: return a JSON object.
+- If the input contains multiple questions: return a JSON array where each element is an object.
+- Each object must include:
+```
+  {
+    "question": string,
+    "questionType": "%1$s" | "%2$s" | "%3$s",
+    "answer": string,
+    "options": string[]    // Only when questionType is "%1$s"
+  }
+```
+
+## Question Type Rules
+- Single choice, multiple choice, or uncertain choice questions → "%1$s"
+- Contains blanks or underscores (e.g., "(    )", "_____") → "%3$s"
+- Other subjective questions → "%2$s"
+
+## Option Extraction (only when question type is "%1$s")
+- Support markers such as A. / A、 / (A) / A) / A: / A： / A． etc.
+- Normalize to "A. xxx".
+- Keep original order and trim extra line breaks and spaces.
+
+## Answer Rules
+- %1$s:
+  - Single choice: return the correct option letter (e.g., "A" or "A. content").
+  - Multiple/uncertain: return all correct option letters, formatted as "ABC" or "A, B, C".
+- %3$s: return the full answer; separate multiple blanks with ";".
+- %2$s: respond concisely with 1–3 key sentences.
+- If the question has no answer and cannot be inferred: set answer to "".
+
+## Formatting Requirements
+- JSON must be syntactically valid (UTF-8, no trailing commas, no extra text).
+- Do not add comments, explanations, or Markdown.
+- Preserve critical conditions and units, and normalize spaces and punctuation.
+- Output JSON only; no code fences or Markdown syntax.
+- The output must start with "{" or "[" and end with "}" or "]" with nothing else surrounding it.
+]]></string>
 </resources>

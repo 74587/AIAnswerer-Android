@@ -1,6 +1,8 @@
 package com.hwb.aianswerer.models
 
 import com.google.gson.annotations.SerializedName
+import com.hwb.aianswerer.MyApplication
+import com.hwb.aianswerer.R
 
 /**
  * OpenAI API请求模型
@@ -105,18 +107,19 @@ data class AIAnswer(
      * 格式化显示答案
      */
     fun formatAnswer(): String {
+        val labels = AnswerSectionLabels
         return buildString {
-            appendLine("【题目】")
+            appendLine(labels.question)
             appendLine(question)
             appendLine()
 
             if (!options.isNullOrEmpty()) {
-                appendLine("【选项】")
+                appendLine(labels.options)
                 options.forEach { appendLine(it) }
                 appendLine()
             }
 
-            appendLine("【答案】")
+            appendLine(labels.answer)
             append(answer)
         }
     }
@@ -138,25 +141,33 @@ fun AIAnswer.formatAnswerWithConfig(
     showQuestion: Boolean = true,
     showOptions: Boolean = true
 ): String {
+    val labels = AnswerSectionLabels
     return buildString {
         // 根据配置显示题目
         if (showQuestion) {
-            appendLine("【题目】")
+            appendLine(labels.question)
             appendLine(question)
             appendLine()
         }
 
         // 根据配置和选项存在性显示选项
         if (showOptions && !options.isNullOrEmpty()) {
-            appendLine("【选项】")
+            appendLine(labels.options)
             options.forEach { appendLine(it) }
             appendLine()
         }
 
         // 始终显示答案
-        appendLine("【答案】")
+        appendLine(labels.answer)
         append(answer)
     }
 }
-// {{END MODIFICATIONS}}
 
+private object AnswerSectionLabels {
+    val question: String
+        get() = MyApplication.getString(R.string.answer_section_question_title)
+    val options: String
+        get() = MyApplication.getString(R.string.answer_section_options_title)
+    val answer: String
+        get() = MyApplication.getString(R.string.answer_section_answer_title)
+}
