@@ -7,7 +7,7 @@
 ### Overview
 AIAnswerer combines on-device OCR with large language models on Android. Capture questions through a floating overlay, let DeepSeek AI (OpenAI-compatible) analyze them, and receive instant answers—ideal for practice, review, or self-testing.
 
-> Screenshot placeholder: App home or welcome screen
+<img src="./image/main.png" width="300px"> <img src="./image/ai_setting.jpg" width="300px"> <img src="./image/answerer.jpg" width="300px"> <img src="./image/crop_demo.jpg" width="300px">
 
 ### Key Features
 - 🖼️ Quick capture: Snap the current screen and auto-focus on the question area
@@ -19,7 +19,7 @@ AIAnswerer combines on-device OCR with large language models on Android. Capture
 ### Getting Ready
 1. Use a device running Android 11 or later and ensure a stable internet connection.
 2. Install the provided APK; enable “unknown sources” when prompted during the first install.
-3. Prepare your DeepSeek API Key (paste it in the in-app settings if the build ships without one; contact your distributor if no input field is available).
+3. Prepare your LLM API Key
 4. During the first launch, grant overlay, screenshot, and notification permissions as requested.
 
 ### Quick Start
@@ -50,6 +50,16 @@ AIAnswerer combines on-device OCR with large language models on Android. Capture
 - Recognized text is sent to your chosen AI provider; avoid sensitive or restricted content.
 - DeepSeek usage may incur costs—monitor your API consumption responsibly.
 - AIAnswerer is for learning and research purposes only. Respect exam rules and local regulations; you are accountable for any misuse.
+
+### Update instructions
+#### v0.3
+ Added the pre-COR cropping function to improve the ability to recognize questions
+
+#### v0.2
+ Fixed an issue where the release package could not request the AI API
+
+#### v0.1
+ First edition
 
 ### License
 This project is released under the [MIT License](/LICENSE)
